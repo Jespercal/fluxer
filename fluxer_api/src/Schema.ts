@@ -49,6 +49,17 @@ const URL_VALIDATOR_OPTIONS = {
 	protocols: ['http', 'https'] as Array<string>,
 } as const;
 
+const LAX_URL_VALIDATOR_OPTIONS = {
+	require_protocol: true,
+	require_valid_protocol: false,
+	require_host: true,
+	disallow_auth: false,
+	allow_trailing_dot: false,
+	allow_protocol_relative_urls: false,
+	allow_fragments: true,
+	validate_length: true
+} as const;
+
 export const PHONE_E164_REGEX = /^\+[1-9]\d{1,14}$/;
 const PHONE_E164_ERROR_MESSAGE = 'Phone number must be in E.164 format (e.g., +1234567890)';
 
@@ -244,6 +255,30 @@ const createUrlSchema = (allowFragments: boolean) => {
 
 export const URLType = createUrlSchema(false);
 export const URLWithFragmentType = createUrlSchema(true);
+
+export const LaxURLType = z
+	.string()
+	.transform(normalizeString)
+	.refine((value) => value.length >= 1 && value.length <= 2048, 'URL length must be between 1 and 2048 characters')
+	.refine((value) => {
+		if (!value.includes('://')) {
+			return false;
+		}
+		try {
+			const url = new URL(value);
+			return true;
+		} catch {
+			return false;
+		}
+	}, 'Invalid URL format')
+	.refine(
+		(value) =>
+			validator.isURL(value, {
+				...LAX_URL_VALIDATOR_OPTIONS,
+				require_tld: Config.nodeEnv !== 'development',
+			}),
+		'Invalid URL format',
+	);
 
 export const AttachmentURLType = z
 	.string()

@@ -18,7 +18,7 @@
  */
 
 import {AVATAR_MAX_SIZE, ChannelTypes} from '~/Constants';
-import {createBase64StringType, createStringType, GeneralChannelNameType, Int64Type, URLType, z} from '~/Schema';
+import {createBase64StringType, createStringType, GeneralChannelNameType, Int64Type, URLType, LaxURLType, z} from '~/Schema';
 import {UserPartialResponse} from '~/user/UserModel';
 
 const ChannelOverwriteResponse = z.object({
@@ -117,6 +117,7 @@ const CreateCat = CreateCommon.extend({
 const CreateLink = CreateCommon.extend({
 	type: z.literal(ChannelTypes.GUILD_LINK),
 	name: GeneralChannelNameType,
+	url: LaxURLType.nullish(),
 });
 
 export const ChannelCreateRequest = z.discriminatedUnion('type', [CreateText, CreateVoice, CreateCat, CreateLink]);
@@ -140,6 +141,7 @@ const UpdateCat = UpdateCommon.extend({
 const UpdateLink = UpdateCommon.extend({
 	type: z.literal(ChannelTypes.GUILD_LINK),
 	name: GeneralChannelNameType.nullish(),
+	url: LaxURLType.nullish(),
 });
 
 const UpdateGroupDm = z.object({
